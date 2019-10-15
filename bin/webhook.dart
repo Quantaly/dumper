@@ -20,20 +20,28 @@ Future<Response> handleWebhook(Request request) async {
   } on Response catch (r) {
     // don't leak timing information
     // this is apparently v important
+    print("got a bad signature bro");
     await Future.delayed(
         Duration(microseconds: _secureRand.nextInt(100 * 1000)));
     return r;
   }
 
-  print("got an event: ${request.headers["x-github-event"]}");
-  print(utf8.decode(body));
+  var bodyJson = jsonDecode(utf8.decode(body));
+
+  if (bodyJson["ref"] == "refs/heads/master") {
+    print("looks like you just pushed to master on "
+        "${bodyJson["repository"]["full_name"]}");
+  } else {
+    print("looks like you just pushed to NOT master on "
+        "${bodyJson["repository"]["full_name"]}");
+  }
 
   return Response(204);
 }
 
 final _sig = RegExp("sha1=([0-9A-Fa-f]{40})");
-final _key = UnmodifiableListView(
-    utf8.encode(Platform.environment["WEBHOOK_SECRET"]));
+final _key =
+    UnmodifiableListView(utf8.encode(Platform.environment["WEBHOOK_SECRET"]));
 final _hmac = Hmac(sha1, _key);
 const _lequal = ListEquality();
 
