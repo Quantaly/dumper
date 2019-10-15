@@ -1,3 +1,5 @@
 build:
   docker:
     web: Dockerfile
+run:
+  web: /dart_runtime/dart_run.sh
