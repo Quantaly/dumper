@@ -1,34 +1,51 @@
 import 'dart:io';
 
-import 'package:args/args.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
+import 'package:shelf_router/shelf_router.dart';
 
-// For Google Cloud Run, set _hostname to '0.0.0.0'.
+import 'webhook.dart';
+
 const _hostname = '0.0.0.0';
 
 Future<void> main(List<String> args) async {
-  var parser = ArgParser()..addOption('port', abbr: 'p');
-  var result = parser.parse(args);
+  var port = int.tryParse(Platform.environment["PORT"] ?? "8080") ?? 8080;
 
-  // For Google Cloud Run, we respect the PORT environment variable
-  var portStr = result['port'] ?? Platform.environment['PORT'] ?? '8080';
-  var port = int.tryParse(portStr);
+  var app = Router();
 
-  if (port == null) {
-    stdout.writeln('Could not parse port value "$portStr" into a number.');
-    // 64: command line usage error
-    exitCode = 64;
-    return;
-  }
+  app.get("/", serveIndex);
+  app.post("/webhook", handleWebhook);
 
   var handler = const shelf.Pipeline()
       .addMiddleware(shelf.logRequests())
-      .addHandler(_echoRequest);
+      .addMiddleware(denullify)
+      .addHandler(app.handler);
 
   var server = await io.serve(handler, _hostname, port);
   print('Serving at http://${server.address.host}:${server.port}');
 }
 
-shelf.Response _echoRequest(shelf.Request request) =>
-    shelf.Response.ok('Request for "${request.url}"');
+shelf.Handler denullify(shelf.Handler innerHandler) => (request) {
+      var maybeResp = innerHandler(request);
+      if (maybeResp == null) {
+        return shelf.Response.notFound("404 not found");
+      } else if (maybeResp is Future<shelf.Response>) {
+        return maybeResp
+            .then((r) => r ?? shelf.Response.notFound("404 not found"));
+      } else {
+        return maybeResp;
+      }
+    };
+
+Future<shelf.Response> serveIndex(shelf.Request request) async {
+  var htmls = await Future.wait([
+    File("templates/index.html").readAsString(),
+    File("README.md").readAsString().then((s) =>
+        md.markdownToHtml(s, extensionSet: md.ExtensionSet.gitHubFlavored))
+  ]);
+  var body = htmls[0].replaceFirst("{{README}}", htmls[1]);
+  return shelf.Response.ok(body, headers: {
+    "Content-Type": "text/html",
+  });
+}
