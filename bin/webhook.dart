@@ -26,6 +26,11 @@ Future<Response> handleWebhook(Request request) async {
     return r;
   }
 
+  var bodyText = utf8.decode(body);
+
+  print("got an event: ${request.headers["x-github-event"]}");
+  print(bodyText);
+
   var bodyJson = jsonDecode(utf8.decode(body));
 
   if (bodyJson["ref"] == "refs/heads/master") {
