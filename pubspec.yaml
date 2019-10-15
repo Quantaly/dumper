@@ -1,0 +1,17 @@
+name: dumper
+description: A ridiculously simple build server for Dart web apps served over GitHub Pages.
+# version: 1.0.0
+# homepage: https://www.example.com
+# author: Your Name <email@example.com>
+
+environment:
+  sdk: '>=2.5.0 <3.0.0'
+
+dependencies:
+  args: ^1.5.0
+  shelf: ^0.7.5
+
+dev_dependencies:
+  quantaly_lints:
+    git:
+      url: https://github.com/Quantaly/dart_lints
