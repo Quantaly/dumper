@@ -33,17 +33,19 @@ Future<Response> handleWebhook(Request request) async {
   print("got an event: ${request.headers["x-github-event"]}");
   print(bodyText);
 
-  var bodyJson = jsonDecode(utf8.decode(body));
+  if (request.headers["x-github-event"] == "push") {
+    var bodyJson = jsonDecode(utf8.decode(body));
 
-  if (bodyJson["ref"] == "refs/heads/master") {
-    print("looks like you just pushed to master on "
-        "${bodyJson["repository"]["full_name"]}");
+    if (bodyJson["ref"] == "refs/heads/master") {
+      print("looks like you just pushed to master on "
+          "${bodyJson["repository"]["full_name"]}");
 
-    _unawaited(buildRepository(
-        bodyJson["repository"]["full_name"], bodyJson["repository"]["url"]));
-  } else {
-    print("looks like you just pushed to NOT master on "
-        "${bodyJson["repository"]["full_name"]}");
+      _unawaited(buildRepository(
+          bodyJson["repository"]["full_name"], bodyJson["repository"]["url"]));
+    } else {
+      print("looks like you just pushed to NOT master on "
+          "${bodyJson["repository"]["full_name"]}");
+    }
   }
 
   return Response(204);
