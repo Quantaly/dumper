@@ -32,7 +32,7 @@ mv build/** ../gh-pages
 cd ../gh-pages
 git add .
 git commit -m "Dump"
-git push
+git push -u origin gh-pages
 
 cd ../bare
-git push
+git push --all
