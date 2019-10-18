@@ -5,11 +5,19 @@ import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
 
-import 'webhook.dart';
+import 'utils/webhook.dart';
 
 const _hostname = '0.0.0.0';
 
 Future<void> main(List<String> args) async {
+  // setup git credentials
+  {
+    String $(String name) => Platform.environment[name];
+    await File("${$("HOME")}/.git-credentials")
+        .writeAsString("https://${$("GITHUB_USER")}:${$("GITHUB_TOKEN")}@github.com\n");
+  }
+
+  // start server
   var port = int.tryParse(Platform.environment["PORT"] ?? "8080") ?? 8080;
 
   var app = Router();

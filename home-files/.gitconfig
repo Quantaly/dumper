@@ -1,0 +1,5 @@
+[user]
+	name = dumper
+	email = nomail@quantaly-dart-dumper.herokuapp.com
+[credential]
+	helper = store

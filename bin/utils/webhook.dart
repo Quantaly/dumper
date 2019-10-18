@@ -9,6 +9,8 @@ import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:shelf/shelf.dart';
 
+import 'git.dart';
+
 final _secureRand = math.Random.secure();
 
 Future<Response> handleWebhook(Request request) async {
@@ -36,6 +38,9 @@ Future<Response> handleWebhook(Request request) async {
   if (bodyJson["ref"] == "refs/heads/master") {
     print("looks like you just pushed to master on "
         "${bodyJson["repository"]["full_name"]}");
+
+    _unawaited(buildRepository(
+        bodyJson["repository"]["full_name"], bodyJson["repository"]["url"]));
   } else {
     print("looks like you just pushed to NOT master on "
         "${bodyJson["repository"]["full_name"]}");
@@ -62,3 +67,6 @@ void verifyKey(String xHubSignature, List<int> body) {
     throw Response.forbidden("incorrect signature, nice try");
   }
 }
+
+// Importing pedantic is for suckers.
+void _unawaited(Future f) {}

@@ -1,5 +1,7 @@
 FROM google/dart:2.5.2
 
+ADD home-files/** /root
+
 WORKDIR /app
 
 ADD pubspec.* /app/
